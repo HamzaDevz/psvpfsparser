@@ -24,6 +24,7 @@ class PfsPageMapper
 private:
    std::map<std::uint32_t, sce_junction> m_pageMap;
    std::set<sce_junction> m_emptyFiles;
+   std::set<std::uint32_t> m_unmappedSalts;
 
 private:
    std::shared_ptr<ICryptoOperations> m_cryptops;
@@ -51,4 +52,6 @@ public:
    const std::map<std::uint32_t, sce_junction>& get_pageMap() const;
 
    const std::set<sce_junction>& get_emptyFiles() const;
+
+   const std::set<std::uint32_t>& get_unmappedSalts() const;
 };

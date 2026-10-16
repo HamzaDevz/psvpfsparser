@@ -841,16 +841,20 @@ bool FilesDbParser::linkFilepaths(const std::set<psvpfs::path>& real_files, std:
        real_files_map[path] = &real_file;
    }
 
-   for(auto& file : m_files)
+   for(auto fileIt = m_files.begin(); fileIt != m_files.end();)
    {
+      auto& file = *fileIt;
       std::string path = file.path().get_value().string();
       to_uppercase(path);
 
+      //trimmed dumps may lack some files: skip them and keep the rest
       auto it = real_files_map.find(path);
       if(it == real_files_map.end())
       {
-         m_output << "File " << file.path() << " does not exist" << std::endl;
-         return false;
+         m_output << "File " << file.path() << " does not exist (skipped)" << std::endl;
+         m_missingFiles.push_back(file);
+         fileIt = m_files.erase(fileIt);
+         continue;
       }
 
       file.path().link_to_real(*it->second);
@@ -864,6 +868,8 @@ bool FilesDbParser::linkFilepaths(const std::set<psvpfs::path>& real_files, std:
             return false;
          }
       }
+
+      ++fileIt;
    }
 
    return true;
@@ -1006,7 +1012,7 @@ int FilesDbParser::parse()
    int numExtra = matchFileLists(files);
 
    //final check of sizes
-   size_t expectedSize = files.size() + directories.size() - numExtra; // allow extra files to exist
+   size_t expectedSize = files.size() + directories.size() - numExtra + m_missingFiles.size(); // allow extra and missing files
    if(expectedSize != flatBlocks.size())
    {
       m_output << "Mismatch in number of files + directories agains number of flat blocks" << std::endl;

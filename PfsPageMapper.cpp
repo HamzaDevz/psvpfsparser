@@ -149,6 +149,10 @@ int PfsPageMapper::validate_merkle_trees(const std::unique_ptr<FilesDbParser>& f
       //get table
       std::shared_ptr<sce_iftbl_base_t> table = entry.first;
 
+      //tables of files missing from the dump have nothing to validate
+      if(m_unmappedSalts.count(table->get_icv_salt()) > 0)
+         continue;
+
       //calculate secret
       unsigned char secret[0x14];
       scePfsUtilGetSecret(m_cryptops, m_iF00D, secret, m_klicensee, ngpfs.files_salt, img_spec_to_crypto_engine_flag(ngpfs.image_spec), table->get_icv_salt(), 0);
@@ -365,6 +369,12 @@ int PfsPageMapper::bruteforce_map(const std::unique_ptr<FilesDbParser>& filesDbP
             m_output << "Match found: " << std::hex << t->get_icv_salt() << " " << *found_path << std::endl;
             m_pageMap.insert(std::make_pair(t->get_icv_salt(), *found_path));
          }
+         else if(m_unmappedSalts.size() < filesDbParser->get_missingFiles().size())
+         {
+            //each file missing from the dump leaves at most one table without a match
+            m_output << "Match not found: " << std::hex << t->get_icv_salt() << " (file missing from the dump)" << std::endl;
+            m_unmappedSalts.insert(t->get_icv_salt());
+         }
          else
          {
             m_output << "Match not found: " << std::hex << t->get_icv_salt() << std::endl;
@@ -435,4 +445,9 @@ const std::map<std::uint32_t, sce_junction>& PfsPageMapper::get_pageMap() const
 const std::set<sce_junction>& PfsPageMapper::get_emptyFiles() const
 {
    return m_emptyFiles;
+}
+
+const std::set<std::uint32_t>& PfsPageMapper::get_unmappedSalts() const
+{
+   return m_unmappedSalts;
 }

@@ -125,6 +125,12 @@ int PfsFilesystem::decrypt_files(const psvpfs::path& destTitleIdPath, PfsProgres
       auto map_entry = pageMap.find(t->get_icv_salt());
       if(map_entry == pageMap.end())
       {
+         if(m_pageMapper->get_unmappedSalts().count(t->get_icv_salt()) > 0)
+         {
+            m_output << "Skipped page " << t->get_icv_salt() << ": file missing from the dump" << std::endl;
+            continue;
+         }
+
          m_output << "failed to find page " << t->get_icv_salt() << " in map" << std::endl;
          return -1;
       }

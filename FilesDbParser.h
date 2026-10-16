@@ -214,6 +214,7 @@ private:
 private:
    sce_ng_pfs_header_t m_header;
    std::vector<sce_ng_pfs_file_t> m_files;
+   std::vector<sce_ng_pfs_file_t> m_missingFiles;
    std::vector<sce_ng_pfs_dir_t> m_dirs;
 
 public:
@@ -263,6 +264,11 @@ public:
    const std::vector<sce_ng_pfs_file_t>& get_files() const
    {
       return m_files;
+   }
+
+   const std::vector<sce_ng_pfs_file_t>& get_missingFiles() const
+   {
+      return m_missingFiles;
    }
 
    const std::vector<sce_ng_pfs_dir_t>& get_dirs() const
